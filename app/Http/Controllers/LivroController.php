@@ -10,9 +10,9 @@ class LivroController extends Controller
 {
     public function index()
     {
-        // Retorna todos os livros
-        $livro = Livro::all();
-        return response()->json($livro);
+        // Retorna todos os livros (10 por página)
+        $livros = Livro::paginate(10);
+        return response()->json($livros);
     }
 
     public function store(StoreLivroRequest $request)

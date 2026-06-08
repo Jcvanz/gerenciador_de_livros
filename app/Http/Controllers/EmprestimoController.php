@@ -15,15 +15,13 @@ class EmprestimoController extends Controller
     public function meusEmprestimos(Request $request)
     {
         $userId = $request->user()->id;
-        $meusEmprestimos = DB::select("
-            SELECT 
-                em.id, em.data_emprestimo, em.data_devolucao, em.status, 
-                li.titulo, li.autor, li.isbn
-            FROM emprestimos em
-                JOIN livros li ON em.livro_id = li.id
-                WHERE em.user_id = ?
-            ORDER BY em.data_emprestimo DESC
-        ", [$userId]);
+        
+        $meusEmprestimos = DB::table('emprestimos as em')
+            ->join('livros as li', 'em.livro_id', '=', 'li.id')
+            ->select('em.id', 'em.data_emprestimo', 'em.data_devolucao', 'em.status', 'li.titulo', 'li.autor', 'li.isbn')
+            ->where('em.user_id', $userId)
+            ->orderBy('em.data_emprestimo', 'desc')
+            ->paginate(10);
 
         return response()->json($meusEmprestimos);
     }

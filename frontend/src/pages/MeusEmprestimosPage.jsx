@@ -14,7 +14,8 @@ import {
   Alert, 
   CircularProgress, 
   Box, 
-  Chip
+  Chip,
+  Pagination
 } from '@mui/material';
 
 const fetcher = (url) => fetch(url, {
@@ -29,9 +30,10 @@ const fetcher = (url) => fetch(url, {
 });
 
 export default function MeusEmprestimosPage() {
+  const [page, setPage] = useState(1);
   const [feedback, setFeedback] = useState({ text: '', type: 'info' });
 
-  const { data: emprestimos, error, isLoading } = useSWR('/api/meus-emprestimos', fetcher);
+  const { data: emprestimos, error, isLoading } = useSWR(`/api/meus-emprestimos?page=${page}`, fetcher);
 
   const handleDevolver = async (emprestimoId) => {
     setFeedback({ text: '', type: 'info' });
@@ -51,7 +53,7 @@ export default function MeusEmprestimosPage() {
 
       setFeedback({ text: 'Livro devolvido', type: 'success' });
 
-      mutate('/api/meus-emprestimos');
+      mutate(`/api/meus-emprestimos?page=${page}`);
     } catch {
       setFeedback({ text: 'Erro ao devolver livro', type: 'error' });
     }
@@ -113,7 +115,7 @@ export default function MeusEmprestimosPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {emprestimos?.map((item) => (
+            {(Array.isArray(emprestimos) ? emprestimos : emprestimos?.data)?.map((item) => (
               <TableRow key={item.id} hover>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.titulo}</TableCell>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>{item.autor}</TableCell>
@@ -141,7 +143,7 @@ export default function MeusEmprestimosPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {(!emprestimos || emprestimos.length === 0) && (
+            {(!emprestimos || (Array.isArray(emprestimos) ? emprestimos.length === 0 : !emprestimos.data || emprestimos.data.length === 0)) && (
               <TableRow>
                 <TableCell colSpan={7} align="center" sx={{ whiteSpace: 'nowrap' }}>
                   Nenhum registro de empréstimo encontrado
@@ -151,6 +153,18 @@ export default function MeusEmprestimosPage() {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {emprestimos?.last_page > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+          <Pagination
+            count={emprestimos.last_page}
+            page={page}
+            onChange={(e, val) => setPage(val)}
+            color="primary"
+            size="large"
+          />
+        </Box>
+      )}
     </Container>
   );
 }
